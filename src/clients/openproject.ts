@@ -26,7 +26,11 @@ export class OpenProjectClient {
   }
 
   private getAuthHeader(): string {
-    return "Basic " + btoa(`apikey:${this.token}`);
+    // OpenProject uses Basic auth with the API key as username and empty password
+    // Format: Basic base64(apikey:token)
+    const credentials = `apikey:${this.token}`;
+    const base64Credentials = btoa(credentials);
+    return `Basic ${base64Credentials}`;
   }
 
   private async request<T>(
