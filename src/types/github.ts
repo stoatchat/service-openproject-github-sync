@@ -13,6 +13,7 @@ export interface GitHubIssue {
   title: string;
   body: string | null;
   state: "open" | "closed";
+  type: string | null;
   assignee: GitHubUser | null;
   created_at: string;
   updated_at: string;
@@ -34,6 +35,7 @@ export interface GitHubIssueWebhook {
 export interface CreateIssueRequest {
   title: string;
   body?: string;
+  type?: string;
   assignee?: string;
   state?: "open" | "closed";
 }
@@ -41,6 +43,7 @@ export interface CreateIssueRequest {
 export interface UpdateIssueRequest {
   title?: string;
   body?: string;
+  type?: string | null;
   assignee?: string | null;
   state?: "open" | "closed";
 }

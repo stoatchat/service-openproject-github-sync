@@ -17,6 +17,7 @@ A Deno-based webhook service that maintains bidirectional synchronization betwee
 |-------|--------|-------------|
 | Title | `title` | `subject` (with `[OP#<id>]` prefix on GitHub) |
 | Description | `body` | `description.raw` |
+| Type | `type` | `type` (Bug, Task, Feature, etc - mapped via config) |
 | Assignee | `assignee.login` | `assignee` (mapped via config) |
 | Status | `state` (open/closed) | `status` (see mapping below) |
 
@@ -55,17 +56,33 @@ REPO_PROJECT_MAP=stoatchat/for-web:8,stoatchat/another-repo:99
 # Assignee mapping (optional)
 ASSIGNEE_MAP=githubuser1:42,githubuser2:123
 
+# Type mapping (optional - maps GitHub issue types to OpenProject type IDs)
+TYPE_MAP=Bug:1,Task:2,Feature:3
+
 # OpenProject custom field ID for "GitHub Issue"
 OP_GITHUB_ISSUE_FIELD=customField123
 ```
 
-### Finding the Custom Field ID
+### Finding OpenProject IDs
 
-The `OP_GITHUB_ISSUE_FIELD` is the ID of the custom field in OpenProject that stores the GitHub issue number. To find it:
+**Custom Field ID (`OP_GITHUB_ISSUE_FIELD`):**
 
+The ID of the custom field in OpenProject that stores the GitHub issue number:
 1. Go to OpenProject → Administration → Custom fields
 2. Find the "GitHub Issue" field (should be an integer field)
-3. The ID is in the URL or the API response when fetching work packages
+3. The ID is in the URL or visible when inspecting work packages via API
+
+**Type IDs for TYPE_MAP:**
+
+To find OpenProject work package type IDs:
+1. Make an API request: `curl -H "Authorization: Basic <token>" https://op.stoatinternal.com/api/v3/types`
+2. Note the ID for each type (Bug, Task, Feature, etc.)
+3. Map GitHub issue type names to these IDs in `TYPE_MAP`
+
+Example: If OpenProject shows Bug=1, Task=2, Feature=3, use:
+```bash
+TYPE_MAP=Bug:1,Task:2,Feature:3
+```
 
 ## Running the Service
 
@@ -93,6 +110,7 @@ docker run -d \
   -e SECRET_TOKEN=your_secret \
   -e REPO_PROJECT_MAP=stoatchat/for-web:8 \
   -e ASSIGNEE_MAP=user1:42 \
+  -e TYPE_MAP=Bug:1,Task:2,Feature:3 \
   -e OP_GITHUB_ISSUE_FIELD=customField123 \
   openproject-github-sync
 ```
@@ -143,14 +161,14 @@ When the service starts, it performs a full reconciliation:
 2. Check if issue has `[OP#123]` prefix in title
 3. If yes: Update existing work package #123
 4. If no: Create new work package and add prefix to GitHub issue title
-5. Sync title, description, assignee, and status
+5. Sync title, description, type, assignee, and status
 
 **OpenProject → GitHub:**
 1. Receive webhook for work package event (created, updated)
 2. Check if work package has GitHub issue number in custom field
 3. If yes: Update existing GitHub issue
 4. If no: Create new GitHub issue and store issue number in work package
-5. Sync title (with `[OP#]` prefix), description, assignee, and status
+5. Sync title (with `[OP#]` prefix), description, type, assignee, and status
 
 ### Conflict Resolution
 

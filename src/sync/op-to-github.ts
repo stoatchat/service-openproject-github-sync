@@ -11,6 +11,7 @@ import * as logger from "../utils/logger.ts";
 import * as statusMapper from "../mappers/status.ts";
 import * as assigneeMapper from "../mappers/assignee.ts";
 import * as linkMapper from "../mappers/link.ts";
+import * as typeMapper from "../mappers/type.ts";
 
 /**
  * Sync an OpenProject work package to GitHub issue
@@ -74,6 +75,11 @@ async function createGitHubFromOP(
   const statusName = statusId ? statusMapper.getStatusNameFromCache(statusId) : null;
   const state = statusName ? statusMapper.mapOPStatusToGitHubState(statusName) : "open";
 
+  // Map type
+  const typeHref = workPackage._links.type?.href;
+  const opTypeId = typeHref ? typeMapper.extractTypeIdFromHref(typeHref) : null;
+  const ghType = opTypeId ? typeMapper.mapOPTypeToGitHubType(opTypeId, config) : null;
+
   // Map assignee
   const assigneeHref = workPackage._links.assignee?.href;
   const opAssigneeId = assigneeHref ? assigneeMapper.extractUserIdFromHref(assigneeHref) : null;
@@ -86,6 +92,11 @@ async function createGitHubFromOP(
     body: workPackage.description?.raw || "",
     state,
   };
+
+  // Add type if we found a mapping
+  if (ghType) {
+    createRequest.type = ghType;
+  }
 
   // Add assignee if we found a mapping
   if (ghAssignee) {
@@ -135,6 +146,11 @@ async function updateGitHubFromOP(
   const statusName = statusId ? statusMapper.getStatusNameFromCache(statusId) : null;
   const state = statusName ? statusMapper.mapOPStatusToGitHubState(statusName) : "open";
 
+  // Map type
+  const typeHref = workPackage._links.type?.href;
+  const opTypeId = typeHref ? typeMapper.extractTypeIdFromHref(typeHref) : null;
+  const ghType = opTypeId ? typeMapper.mapOPTypeToGitHubType(opTypeId, config) : null;
+
   // Map assignee
   const assigneeHref = workPackage._links.assignee?.href;
   const opAssigneeId = assigneeHref ? assigneeMapper.extractUserIdFromHref(assigneeHref) : null;
@@ -147,6 +163,11 @@ async function updateGitHubFromOP(
     body: workPackage.description?.raw || "",
     state,
   };
+
+  // Update type if we found a mapping
+  if (ghType) {
+    updateRequest.type = ghType;
+  }
 
   // Update assignee (null to clear)
   updateRequest.assignee = ghAssignee;

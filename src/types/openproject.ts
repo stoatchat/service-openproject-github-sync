@@ -26,6 +26,13 @@ export interface OPStatus {
   _links: OPLinks;
 }
 
+export interface OPType {
+  _type: "Type";
+  id: number;
+  name: string;
+  _links: OPLinks;
+}
+
 export interface OPDescription {
   format: "markdown" | "textile" | "plain";
   raw: string;
@@ -71,6 +78,13 @@ export interface OPStatusCollection {
   _type: "Collection";
   _embedded: {
     elements: OPStatus[];
+  };
+}
+
+export interface OPTypeCollection {
+  _type: "Collection";
+  _embedded: {
+    elements: OPType[];
   };
 }
 

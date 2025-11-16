@@ -9,6 +9,7 @@ import { OpenProjectClient } from "./src/clients/openproject.ts";
 import { startServer } from "./src/server.ts";
 import { performReconciliationSync } from "./src/sync/reconcile.ts";
 import { initializeStatusMapping } from "./src/mappers/status.ts";
+import { initializeTypeMapping } from "./src/mappers/type.ts";
 import * as logger from "./src/utils/logger.ts";
 
 async function main() {
@@ -25,6 +26,10 @@ async function main() {
     // Initialize status mapping (fetch statuses from OpenProject)
     logger.info("Initializing status mapping...");
     await initializeStatusMapping(opClient);
+
+    // Initialize type mapping (fetch types from OpenProject)
+    logger.info("Initializing type mapping...");
+    await initializeTypeMapping(opClient);
 
     // Perform startup reconciliation sync
     logger.info("Performing startup reconciliation sync...");

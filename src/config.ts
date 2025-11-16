@@ -13,6 +13,7 @@ export interface Config {
   secretToken: string;
   repoProjectMap: Map<string, number>; // "owner/repo" -> project_id
   assigneeMap: Map<string, number>;    // github_username -> op_user_id
+  typeMap: Map<string, number>;        // github_issue_type -> op_type_id
   opGithubIssueField: string;          // Custom field ID
 }
 
@@ -82,6 +83,40 @@ function parseAssigneeMap(mapString: string | undefined): Map<string, number> {
 }
 
 /**
+ * Parse type mapping from environment variable
+ * Format: "Bug:1,Task:2,Feature:3"
+ */
+function parseTypeMap(mapString: string | undefined): Map<string, number> {
+  const map = new Map<string, number>();
+
+  if (!mapString || mapString.trim() === "") {
+    logger.info("No type mapping configured");
+    return map;
+  }
+
+  const pairs = mapString.split(",").map(s => s.trim()).filter(s => s);
+
+  for (const pair of pairs) {
+    const [ghType, opTypeIdStr] = pair.split(":");
+    if (!ghType || !opTypeIdStr) {
+      logger.warn(`Invalid type mapping, skipping: ${pair}`);
+      continue;
+    }
+
+    const opTypeId = parseInt(opTypeIdStr, 10);
+    if (isNaN(opTypeId)) {
+      logger.warn(`Invalid OP type ID in mapping, skipping: ${opTypeIdStr}`);
+      continue;
+    }
+
+    map.set(ghType.trim(), opTypeId);
+  }
+
+  logger.info(`Loaded ${map.size} type mappings`);
+  return map;
+}
+
+/**
  * Load and validate configuration from environment variables
  */
 export async function loadConfig(): Promise<Config> {
@@ -94,6 +129,7 @@ export async function loadConfig(): Promise<Config> {
   const secretToken = Deno.env.get("SECRET_TOKEN");
   const repoProjectMapStr = Deno.env.get("REPO_PROJECT_MAP");
   const assigneeMapStr = Deno.env.get("ASSIGNEE_MAP");
+  const typeMapStr = Deno.env.get("TYPE_MAP");
   const opGithubIssueField = Deno.env.get("OP_GITHUB_ISSUE_FIELD");
 
   // Validate required fields
@@ -123,6 +159,7 @@ export async function loadConfig(): Promise<Config> {
     secretToken,
     repoProjectMap: parseRepoProjectMap(repoProjectMapStr),
     assigneeMap: parseAssigneeMap(assigneeMapStr),
+    typeMap: parseTypeMap(typeMapStr),
     opGithubIssueField,
   };
 

@@ -11,6 +11,7 @@ import * as logger from "../utils/logger.ts";
 import * as statusMapper from "../mappers/status.ts";
 import * as assigneeMapper from "../mappers/assignee.ts";
 import * as linkMapper from "../mappers/link.ts";
+import * as typeMapper from "../mappers/type.ts";
 
 /**
  * Sync a GitHub issue to OpenProject work package
@@ -59,8 +60,11 @@ async function createOPFromGitHub(
     issueNumber: issue.number,
   });
 
-  // Get default type href
-  const typeHref = await opClient.getDefaultTypeHref(projectId);
+  // Map type
+  const opTypeId = typeMapper.mapGitHubTypeToOPType(issue.type, config);
+  const typeHref = opTypeId
+    ? typeMapper.getTypeHref(opTypeId)
+    : await opClient.getDefaultTypeHref(projectId);
 
   // Map status
   const statusId = statusMapper.mapGitHubStateToOPStatus(issue.state);
@@ -145,6 +149,14 @@ async function updateOPFromGitHub(
     },
     _links: {},
   };
+
+  // Map type
+  const opTypeId = typeMapper.mapGitHubTypeToOPType(issue.type, config);
+  if (opTypeId !== null) {
+    updateRequest._links.type = {
+      href: typeMapper.getTypeHref(opTypeId),
+    };
+  }
 
   // Map status
   const statusId = statusMapper.mapGitHubStateToOPStatus(issue.state);

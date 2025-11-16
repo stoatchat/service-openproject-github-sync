@@ -40,6 +40,7 @@ GitHub Issue ←→ Sync Service ←→ OpenProject Work Package
 |-------|--------|-------------|-------|
 | Title | `title` | `subject` | GitHub prefixed with `[OP#<id>]` |
 | Description | `body` | `description.raw` | Plain text/markdown |
+| Type | `type` | `type` | Mapped via config (Bug, Task, Feature, etc) |
 | Assignee | `assignee.login` | `assignee` (user ID) | Mapped via config |
 | Status | `state` (open/closed) | `status` | See status mapping below |
 
@@ -67,6 +68,26 @@ ASSIGNEE_MAP=johndoe:42,janedoe:123
 ```
 
 If no mapping exists, the assignee field is not synced for that user.
+
+### Type Mapping
+
+GitHub Issue Types map to OpenProject work package types via configuration:
+
+```
+TYPE_MAP=github_type:op_type_id,github_type2:op_type_id2
+```
+
+Example:
+```
+TYPE_MAP=Bug:1,Task:2,Feature:3
+```
+
+**Behavior:**
+- If a type mapping exists, it's used for both directions
+- If no mapping exists, the service attempts to match by name (e.g., "Bug" → Bug type)
+- If no match found, type field is not synced (uses default type when creating)
+- GitHub uses Issue Types (org-level configuration)
+- OpenProject uses Work Package Types (Task, Bug, Feature, etc.)
 
 ## Linking Strategy
 
@@ -142,6 +163,9 @@ REPO_PROJECT_MAP=stoatchat/for-web:8,stoatchat/my-repo:999
 
 # User mapping (optional, comma-separated github_user:op_user_id pairs)
 ASSIGNEE_MAP=johndoe:42,janedoe:123
+
+# Type mapping (optional, comma-separated github_type:op_type_id pairs)
+TYPE_MAP=Bug:1,Task:2,Feature:3
 
 # OpenProject custom field ID for "GitHub Issue" field
 OP_GITHUB_ISSUE_FIELD=customField123

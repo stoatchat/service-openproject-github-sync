@@ -7,6 +7,8 @@ import type {
   OPWorkPackageCollection,
   OPStatusCollection,
   OPStatus,
+  OPTypeCollection,
+  OPType,
   CreateWorkPackageRequest,
   UpdateWorkPackageRequest,
   OPErrorResponse,
@@ -157,6 +159,19 @@ export class OpenProjectClient {
       "/api/v3/statuses",
     );
     logger.info(`Fetched ${result._embedded.elements.length} statuses`);
+    return result._embedded.elements;
+  }
+
+  /**
+   * Get all available types
+   */
+  async getTypes(): Promise<OPType[]> {
+    logger.debug("Fetching available types");
+    const result = await this.request<OPTypeCollection>(
+      "GET",
+      "/api/v3/types",
+    );
+    logger.info(`Fetched ${result._embedded.elements.length} types`);
     return result._embedded.elements;
   }
 
